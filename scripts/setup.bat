@@ -71,6 +71,12 @@ if %ERRORLEVEL% NEQ 0 (
 echo    [OK] Dependencias instaladas correctamente
 echo.
 
+REM Instalar el paquete en modo editable
+echo [*] Instalando el paquete en modo desarrollo...
+pip install -e .
+echo    [OK] Paquete instalado correctamente
+echo.
+
 REM Crear directorio de videos
 echo [*] Creando directorio de videos...
 if not exist "videos" mkdir videos
@@ -93,12 +99,12 @@ REM Crear script de ejecución
 echo [*] Creando script de ejecucion...
 (
 echo @echo off
-echo cd /d "%%~dp0"
+echo cd /d "%%~dp0.."
 echo call venv\Scripts\activate.bat
 echo python -m focusrecorder
 echo pause
-) > run.bat
-echo    [OK] Script creado: run.bat
+) > "scripts\run.bat"
+echo    [OK] Script creado: scripts\run.bat
 echo.
 
 echo ======================================
