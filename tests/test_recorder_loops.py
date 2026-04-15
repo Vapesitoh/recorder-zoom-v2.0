@@ -84,7 +84,6 @@ def test_record_loop_linux_branch(monkeypatch, tmp_path):
     rec.start_time = time.perf_counter()
     rec.is_recording = True
     
-    # Fake MSS
     class FakeMSSContext:
         def __enter__(self):
             return self

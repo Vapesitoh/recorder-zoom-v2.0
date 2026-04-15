@@ -57,12 +57,11 @@ def test_recorder_full_various_modes(monkeypatch, tmp_path):
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
     
     def fake_reencode(path):
-        pass # dont simulate true ffmpeg encode here
+        pass
     monkeypatch.setattr(rec, "_reencode_h264", fake_reencode)
     monkeypatch.setattr(cv2, "VideoWriter", MagicMock())
     monkeypatch.setattr(cv2, "VideoWriter_fourcc", lambda *args: "mp4v")    
     
-    # 0 length raw data
     rec.raw_data = []
     rec._render_adaptive_video(None, "both")
     
@@ -71,10 +70,8 @@ def test_recorder_full_various_modes(monkeypatch, tmp_path):
         (blank_frame.copy(), 320, 240, False, 0.0),
         (blank_frame.copy(), 320, 240, True, 1.0)
     ]
-    
-    # mode full only
+
     rec._render_adaptive_video(None, "full")
-    # mode tiktok only
     rec._render_adaptive_video(None, "tiktok")
 
 def test_recorder_reencode_fails_gracefully(monkeypatch, tmp_path):
@@ -88,7 +85,6 @@ def test_recorder_reencode_fails_gracefully(monkeypatch, tmp_path):
     monkeypatch.setattr(os.path, "exists", lambda path: False)
     monkeypatch.setattr(os.path, "getsize", lambda path: 100)
     
-    # simulate fallback if tmp_path is missing but size > 0
     rec._reencode_h264("fake_path.mp4")
     
     monkeypatch.setattr(os.path, "getsize", lambda path: 0)
@@ -99,7 +95,6 @@ def test_recorder_os_logic(monkeypatch, tmp_path):
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
     monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
     
-    # Test IS_WINDOWS branch
     monkeypatch.setattr(recorder_module, "IS_WINDOWS", False)
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
     assert rec.sct is None
@@ -112,6 +107,5 @@ def test_recorder_stop_no_listener(monkeypatch, tmp_path):
     rec.is_recording = True
     rec.thread = MagicMock()
     rec._render_adaptive_video = MagicMock()
-    # Call stop before start so it has no listener
     rec.stop(None, "full")
     rec._render_adaptive_video.assert_called_once()
