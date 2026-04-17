@@ -1,10 +1,13 @@
-venv
+venv/
 /venv
+.venv
 .env
-__pycache__
-*.pyc
+__pycache__/
+*.py[cod]
+$py.class
 .DS_Store
-.idea
+.idea/
+.vscode/
 *.log
 *.sqlite3
 *.db
@@ -12,29 +15,25 @@ __pycache__
 *.swp
 *.swo
 *.tmp
-*.zip
-*.tar.gz
-*.egg-info
-dist
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
 *.mp4
 *.webp
 
-# Scripts generados automáticamente
 run.sh
 run.bat
 
-# Briefcase build
-build/
 *.AppImage
 *.msi
 *.dmg
 *.deb
 *.rpm
 
-# Videos grabados
 videos/
-
 .briefcase/
 *.dist-info/
-build/
-dist/
