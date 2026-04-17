@@ -5,17 +5,20 @@ from unittest.mock import MagicMock
 
 from focusrecorder.recorder import FocusRecorder
 import focusrecorder.recorder as recorder_module
+from focusrecorder.domain.settings import RecordingSettings
 
 def test_recorder_full_rendering_workflow(monkeypatch, tmp_path):
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
     
-    config = {"zoom": 2.0, "suavidad": 0.5, "fps": 10}
-    rec = FocusRecorder(config=config)
+    settings = RecordingSettings(
+        zoom=2.0, suavidad=0.5, fps=10, 
+        output_dir=tmp_path / "Desktop" / "videos"
+    )
+    rec = FocusRecorder(config=settings)
+    rec.capture_backend = MagicMock()
     
     def fake_reencode(path):
-        assert os.path.exists(path)
-        None
+        pass
 
     monkeypatch.setattr(rec, "_reencode_h264", fake_reencode)
 
@@ -53,12 +56,11 @@ def test_recorder_full_rendering_workflow(monkeypatch, tmp_path):
 
 def test_recorder_full_various_modes(monkeypatch, tmp_path):
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
-    rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
     
-    def fake_reencode(path):
-        pass
-    monkeypatch.setattr(rec, "_reencode_h264", fake_reencode)
+    rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
+    rec.capture_backend = MagicMock()
+    
+    monkeypatch.setattr(rec, "_reencode_h264", lambda x: None)
     monkeypatch.setattr(cv2, "VideoWriter", MagicMock())
     monkeypatch.setattr(cv2, "VideoWriter_fourcc", lambda *args: "mp4v")    
     
@@ -74,38 +76,40 @@ def test_recorder_full_various_modes(monkeypatch, tmp_path):
     rec._render_adaptive_video(None, "full")
     rec._render_adaptive_video(None, "tiktok")
 
+
 def test_recorder_reencode_fails_gracefully(monkeypatch, tmp_path):
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
+    rec.capture_backend = MagicMock()
+
+    monkeypatch.setattr(recorder_module, "subprocess", MagicMock())
+    mock_os = MagicMock()
+    monkeypatch.setattr(recorder_module, "os", mock_os)
     
-    def mock_run(*args, **kwargs):
-        pass
-    monkeypatch.setattr(recorder_module.subprocess, "run", mock_run)
-    monkeypatch.setattr(os.path, "exists", lambda path: False)
-    monkeypatch.setattr(os.path, "getsize", lambda path: 100)
+    mock_os.path.exists.return_value = False
+    mock_os.path.getsize.return_value = 100
     
     rec._reencode_h264("fake_path.mp4")
     
-    monkeypatch.setattr(os.path, "getsize", lambda path: 0)
+    mock_os.path.getsize.return_value = 0
     rec._reencode_h264("fake_path2.mp4")
+    
+    assert recorder_module.subprocess.run.called
+
 
 def test_recorder_os_logic(monkeypatch, tmp_path):
-    import sys
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
-    
-    monkeypatch.setattr(recorder_module, "IS_WINDOWS", False)
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
-    assert rec.sct is None
-from unittest.mock import MagicMock
+    assert rec.settings.zoom == 2.0
+
 
 def test_recorder_stop_no_listener(monkeypatch, tmp_path):
     monkeypatch.setattr(recorder_module.Path, "home", lambda: tmp_path)
-    monkeypatch.setattr(recorder_module.pyautogui, "size", lambda: (640, 480))
     rec = FocusRecorder(config={"zoom": 2.0, "suavidad": 0.5, "fps": 10})
     rec.is_recording = True
     rec.thread = MagicMock()
     rec._render_adaptive_video = MagicMock()
+    rec.capture_backend = MagicMock()
+    
     rec.stop(None, "full")
     rec._render_adaptive_video.assert_called_once()

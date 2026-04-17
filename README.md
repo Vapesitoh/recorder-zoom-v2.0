@@ -1,6 +1,29 @@
-# Video Recorder - Grabador de Pantalla con Seguimiento
+# Recorder Zoom - Grabador de Pantalla con Seguimiento
 
 Aplicación multiplataforma para grabar pantalla con seguimiento del cursor y zoom dinámico.
+
+## 🛠️ Requisitos y Dependencias
+
+### Requisitos de Software
+- **Python 3.11 (Requerido)**: Este proyecto utiliza dependencias que requieren específicamente Python 3.11 para garantizar la compatibilidad binaria entre librerías como `NumPy`, `OpenCV` y `PyQt6`. El uso de otras versiones de Python puede resultar en errores de compilación o comportamiento inesperado.
+- **FFmpeg**: Necesario para la re-codificación de video.
+
+### Dependencias del Sistema Operativo
+
+**Ubuntu/Debian:**
+```bash
+sudo apt-get update
+sudo apt-get install -y python3-venv python3-pip ffmpeg libgl1 libglib2.0-0 libegl1 xvfb
+```
+
+**macOS:**
+```bash
+brew install python@3.11 ffmpeg
+```
+
+**Windows:**
+- Instalar **Python 3.11** desde [python.org](https://www.python.org/downloads/).
+- La dependencia `imageio-ffmpeg` descargará un binario de **FFmpeg** automáticamente al instalar los paquetes de Python, por lo que no se requiere instalación manual.
 
 ## 🚀 Instalación y Ejecución
 
@@ -75,29 +98,6 @@ Esto genera:
 - **Windows**: Instalador `.msi`
 - **Linux**: AppImage ejecutable
 - **macOS**: Bundle `.app`
-
-## 🛠️ Requisitos y Dependencias
-
-### Requisitos de Software
-- **Python 3.11 (Requerido)**: Este proyecto utiliza dependencias que requieren específicamente Python 3.11 para garantizar la compatibilidad binaria entre librerías como `NumPy`, `OpenCV` y `PyQt6`. El uso de otras versiones de Python puede resultar en errores de compilación o comportamiento inesperado.
-- **FFmpeg**: Necesario para la re-codificación de video.
-
-### Dependencias del Sistema Operativo
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get update
-sudo apt-get install -y python3-venv python3-pip ffmpeg libgl1 libglib2.0-0 libegl1 xvfb
-```
-
-**macOS:**
-```bash
-brew install python@3.11 ffmpeg
-```
-
-**Windows:**
-- Instalar **Python 3.11** desde [python.org](https://www.python.org/downloads/).
-- La dependencia `imageio-ffmpeg` descargará un binario de **FFmpeg** automáticamente al instalar los paquetes de Python, por lo que no se requiere instalación manual.
 
 ## 🐳 Uso con Docker
 

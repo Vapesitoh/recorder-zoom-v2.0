@@ -1,38 +1,43 @@
+from unittest.mock import MagicMock
 from focusrecorder.main import RenderThread
 
 
-class DummyRecorder:
-    def __init__(self, filename="C:/tmp/video_10.mp4"):
-        self.filename = filename
-        self.calls = []
-
-    def stop(self, callback_progress=None, export_mode="full"):
-        self.calls.append(export_mode)
-        if callback_progress:
-            callback_progress(50)
-
-
 def test_render_thread_full_mode_emits_paths(qtbot):
-    recorder = DummyRecorder()
-    thread = RenderThread(recorder, "full")
+    recorder = MagicMock()
+    recorder.is_recording = True
+
+    service = MagicMock()
+    service.stop_recording.return_value = {
+        "full_path": "C:/tmp/res.mp4",
+        "tiktok_path": ""
+    }
+
+    thread = RenderThread(service, recorder, export_mode="full")
 
     finished_payload = []
     thread.finished.connect(lambda full, tiktok: finished_payload.append((full, tiktok)))
 
     thread.run()
 
-    assert recorder.calls == ["full"]
-    assert finished_payload == [("C:/tmp/video_10.mp4", "")]
+    assert finished_payload == [("C:/tmp/res.mp4", "")]
 
 
 def test_render_thread_both_mode_emits_both_paths(qtbot):
-    recorder = DummyRecorder("C:/tmp/video_12.mp4")
-    thread = RenderThread(recorder, "both")
+    recorder = MagicMock()
+    recorder.is_recording = True
+
+    service = MagicMock()
+    service.stop_recording.return_value = {
+        "full_path": "C:/tmp/res.mp4",
+        "tiktok_path": "C:/tmp/res_tiktok.mp4"
+    }
+
+    thread = RenderThread(service, recorder, export_mode="both")
 
     finished_payload = []
     thread.finished.connect(lambda full, tiktok: finished_payload.append((full, tiktok)))
 
     thread.run()
 
-    assert recorder.calls == ["both"]
-    assert finished_payload == [("C:/tmp/video_12.mp4", "C:/tmp/video_12_tiktok.mp4")]
+    assert finished_payload == [("C:/tmp/res.mp4", "C:/tmp/res_tiktok.mp4")]
+

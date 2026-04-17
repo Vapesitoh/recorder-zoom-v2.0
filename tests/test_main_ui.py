@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 import focusrecorder.main as main_module
 from focusrecorder.main import FocusApp
 
@@ -17,23 +18,26 @@ def test_get_export_mode_mapping(qtbot):
 
 
 class DummyRecorder:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
         self.is_recording = False
         self.filename = "C:/tmp/video_7.mp4"
-        self.started = False
 
-    def start(self):
-        self.is_recording = True
-        self.started = True
+class DummyRecordingService:
+    def __init__(self):
+        self.recorder = None
 
-
+    def start_recording(self, settings):
+        self.recorder = DummyRecorder()
+        self.recorder.is_recording = True
+        self.settings = settings
+        return MagicMock(recorder=self.recorder, filename="C:/tmp/video_7.mp4")
 
 def test_toggle_start_updates_ui_and_config(monkeypatch, qtbot):
-    monkeypatch.setattr(main_module, "FocusRecorder", DummyRecorder)
-
     app = FocusApp()
     qtbot.addWidget(app)
+    
+    dummy_service = DummyRecordingService()
+    app.recording_service = dummy_service
 
     app.zoom_spin.setValue(20)
     app.smooth_slider.setValue(5)
@@ -41,9 +45,13 @@ def test_toggle_start_updates_ui_and_config(monkeypatch, qtbot):
 
     app.toggle()
 
-    assert isinstance(app.recorder, DummyRecorder)
-    assert app.recorder.started
-    assert app.recorder.config == {"zoom": 2.0, "suavidad": 0.05, "fps": 30}
+    assert app.recorder == dummy_service.recorder
+    assert app.recorder.is_recording
+    import pytest
+    assert dummy_service.settings.zoom == pytest.approx(2.0)
+    assert dummy_service.settings.suavidad == pytest.approx(0.05)
+    assert dummy_service.settings.fps == 30
+
     assert app.btn.text() == "DETENER Y PROCESAR"
     assert "Grabando" in app.status.text()
     assert not app.zoom_spin.isEnabled()

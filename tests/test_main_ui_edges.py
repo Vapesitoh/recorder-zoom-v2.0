@@ -5,33 +5,23 @@ import PyQt6.QtWidgets as QtWidgets
 import focusrecorder.main as main_module
 
 
-def test_main_run_function(monkeypatch):
-    calls = []
-
-    class DummyQApplication:
-        def __init__(self, argv):
-            calls.append("QApplication")
-            self.argv = argv
-        def exec(self):
-            calls.append("exec")
-            return 0
-
-    class DummyFocusApp:
-        def __init__(self):
-            calls.append("FocusApp")
-        def show(self):
-            calls.append("show")
-
-    monkeypatch.setattr(main_module, "QApplication", DummyQApplication)
-    monkeypatch.setattr(main_module, "FocusApp", DummyFocusApp)
-    monkeypatch.setattr(sys, "exit", lambda code: calls.append("exit"))
-
-    main_module.run()
-
-    assert calls == ["QApplication", "FocusApp", "show", "exec", "exit"]
+def test_main_run_function():
+    with patch("focusrecorder.main.QApplication") as mock_qapp, \
+         patch("focusrecorder.main.FocusApp") as mock_app, \
+         patch("sys.exit") as mock_exit:
+        
+        mock_instance = MagicMock()
+        mock_app.return_value = mock_instance
+        
+        main_module.run()
+        
+        mock_qapp.assert_called_once()
+        mock_app.assert_called_once()
+        mock_instance.show.assert_called_once()
+        mock_exit.assert_called_once()
 
 
-def test_main_toggle_stops_recording_and_renders(monkeypatch, qtbot):
+def test_main_toggle_stops_recording_and_renders(qtbot):
     app = main_module.FocusApp()
     qtbot.addWidget(app)
 
@@ -47,43 +37,51 @@ def test_main_toggle_stops_recording_and_renders(monkeypatch, qtbot):
         app.toggle()
 
         assert not app.btn.isEnabled()
-        mock_thread_class.assert_called_once_with(app.recorder, export_mode="tiktok")
+        mock_thread_class.assert_called_once_with(app.recording_service, app.recorder, export_mode="tiktok")
         mock_thread_instance.start.assert_called_once()
         assert "TikTok" in app.status.text()
     
     app.on_finished("", "")
     assert "GRAB" in app.btn.text().upper()
 
-def test_main_toggle_starts_recording(monkeypatch, qtbot):
+
+def test_main_toggle_starts_recording(qtbot):
     app = main_module.FocusApp()
     qtbot.addWidget(app)
     
     app.recorder = None
     
-    with patch.object(main_module, "FocusRecorder") as mock_recorder_class:
-        mock_recorder_instance = MagicMock()
-        mock_recorder_instance.filename = "test_video.mp4"
-        mock_recorder_instance.is_recording = False
-        mock_recorder_class.return_value = mock_recorder_instance
-        
-        app.toggle()
-        
-        mock_recorder_instance.start.assert_called_once()
-        assert "DETENER" in app.btn.text()
+    mock_service = MagicMock()
+    mock_result = MagicMock()
+    mock_result.recorder = MagicMock()
+    mock_result.filename = "test_video.mp4"
+    mock_service.start_recording.return_value = mock_result
+    
+    app.recording_service = mock_service
+    
+    app.toggle()
+    
+    mock_service.start_recording.assert_called_once()
+    assert "DETENER" in app.btn.text()
+
 
 def test_main_render_thread():
     with patch('focusrecorder.main.QThread'):
         mock_recorder = MagicMock()
-        mock_recorder.filename = "test.mp4"
+        mock_service = MagicMock()
+        mock_service.stop_recording.return_value = {
+            "full_path": "test.mp4",
+            "tiktok_path": ""
+        }
         
-        # Modo full
-        thread = main_module.RenderThread(mock_recorder, "full")
+        thread = main_module.RenderThread(mock_service, mock_recorder, export_mode="full")
         thread.progress = MagicMock()
         thread.finished = MagicMock()
         
         thread.run()
-        mock_recorder.stop.assert_called_once()
+        mock_service.stop_recording.assert_called_once()
         thread.finished.emit.assert_called_with("test.mp4", "")
+
 
 def test_main_on_finished_with_paths(qtbot):
     app = main_module.FocusApp()
