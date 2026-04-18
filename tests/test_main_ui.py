@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 import focusrecorder.main as main_module
 from focusrecorder.main import FocusApp
+from focusrecorder.application.dto import StopRecordingResult
 
 
 def test_get_export_mode_mapping(qtbot):
@@ -26,7 +27,7 @@ class DummyRecordingService:
     def __init__(self):
         self.recorder = None
 
-    def start_recording(self, settings):
+    def execute(self, settings):
         self.recorder = DummyRecorder()
         self.recorder.is_recording = True
         self.settings = settings
@@ -37,7 +38,7 @@ def test_toggle_start_updates_ui_and_config(monkeypatch, qtbot):
     qtbot.addWidget(app)
     
     dummy_service = DummyRecordingService()
-    app.recording_service = dummy_service
+    app.presenter.start_recording_use_case = dummy_service
 
     app.zoom_spin.setValue(20)
     app.smooth_slider.setValue(5)
@@ -45,8 +46,8 @@ def test_toggle_start_updates_ui_and_config(monkeypatch, qtbot):
 
     app.toggle()
 
-    assert app.recorder == dummy_service.recorder
-    assert app.recorder.is_recording
+    assert app.presenter.recorder == dummy_service.recorder
+    assert app.presenter.recorder.is_recording
     import pytest
     assert dummy_service.settings.zoom == pytest.approx(2.0)
     assert dummy_service.settings.suavidad == pytest.approx(0.05)
@@ -66,7 +67,7 @@ def test_on_finished_shows_filenames_and_resets_controls(qtbot):
     app.progress_bar.setVisible(True)
     app._set_controls_enabled(False)
 
-    app.on_finished("C:/tmp/video_1.mp4", "C:/tmp/video_1_tiktok.mp4")
+    app.on_finished(StopRecordingResult("C:/tmp/video_1.mp4", "C:/tmp/video_1_tiktok.mp4"))
 
     status_text = app.status.text()
     assert "video_1.mp4" in status_text
