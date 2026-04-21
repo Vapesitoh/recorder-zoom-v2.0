@@ -255,7 +255,7 @@ Archivo:
 
 ## Estado actual del proyecto
 
-### Mejoras ya logradas
+### Mejoras
 
 - interfaz mucho más moderna que la original
 - mejor organización visual
