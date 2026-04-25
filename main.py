@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Wrapper para ejecutar Focus Recorder desde la raíz del proyecto
 """
